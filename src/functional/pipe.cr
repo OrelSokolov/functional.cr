@@ -15,16 +15,22 @@
 # is already idiomatic Crystal with `.` — no pipe needed there.
 
 macro pipe(value, *steps)
-  _functional_pipe({{value}}, {{steps.splat}})
-end
-
-macro _functional_pipe(value, *steps)
   {% if steps.size == 0 %}
     {{value}}
-  {% elsif steps.size == 1 %}
-    _functional_step({{value}}, {{steps[0]}})
   {% else %}
-    _functional_pipe(_functional_step({{value}}, {{steps[0]}}), {% for i in 1...steps.size %}{{steps[i]}}, {% end %})
+    _functional_pipe({{value}}, [{{steps.splat}}], 0)
+  {% end %}
+end
+
+# Iterates by index over the steps array passed as a single node.
+# Re-splatting the tail on every level (the obvious recursive design)
+# copies O(n) AST nodes per level => O(n^2); a 100k-step pipeline then
+# OOMs the compiler. Index-sharing keeps it O(n).
+macro _functional_pipe(value, steps, idx)
+  {% if idx == steps.size %}
+    {{value}}
+  {% else %}
+    _functional_pipe(_functional_step({{value}}, {{steps[idx]}}), {{steps}}, {{idx + 1}})
   {% end %}
 end
 

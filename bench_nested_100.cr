@@ -1,0 +1,6 @@
+def step(x : Int32) : Int32
+  x + 1
+end
+
+value = step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(0))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+puts value
