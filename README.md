@@ -45,12 +45,43 @@ gcd(48, 18) # => 6
 
 Clauses are tried top to bottom; the first match wins. Patterns:
 
-| Pattern      | Meaning                             |
-|--------------|-------------------------------------|
-| `42`, `"hi"` | equality (`==`)                     |
-| `Int32`      | type check (`is_a?`)                |
-| `n`          | binds the argument to `n`           |
-| `_`          | wildcard, always matches            |
+| Pattern            | Meaning                                        |
+|--------------------|------------------------------------------------|
+| `42`, `"hi"`       | equality (`==`)                                |
+| `Int32`            | type check (`is_a?`)                           |
+| `n`                | binds the argument to `n`                      |
+| `_`                | wildcard, always matches                       |
+| `{a, 0}`, `{x, y}` | tuple destructuring                            |
+| `{name: n, age: 0}`| named tuple destructuring by key               |
+| `[head, _]`        | array destructuring                            |
+
+Every position inside a destructuring pattern is a full pattern itself, so
+patterns nest; write nested tuples with a space after `{` — `{ {x, y}, z }` —
+because `{{` is parsed as a macro interpolation:
+
+```crystal
+deff :axis do
+  fn({0, y})     { "on the y axis: #{y}" }
+  fn({x, 0})     { "on the x axis: #{x}" }
+  fn(_)          { "diagonal" }
+end
+
+deff :user_role do
+  fn({name: "admin", org: o}) { "#{o} admin" }
+  fn({name: n, org: _})       { n }
+  fn(_)                       { "anon" }
+end
+
+axis({0, 5})                     # => "on the y axis: 5"
+user_role({name: "bob", org: "x"}) # => "bob"
+```
+
+One compile-time rule: destructured positions are indexed statically, so a
+deff'd argument must narrow to a single shape. Mixing tuples of different
+sizes (or named tuples with different key sets) in calls to the same `deff`
+is a compile error, not a runtime mismatch — add a type/binder clause and
+dispatch on `Tuple(Int32, Int32)` style patterns instead if you need to
+separate shapes.
 
 Guards, spelled `when:` (Elixir `when`):
 
@@ -228,7 +259,7 @@ Functional.identity(x)                 # id
 
 ## Roadmap ideas
 
-- destructuring patterns in `deff` clauses (`fn({a, b}) { ... }`)
+- hash destructuring patterns in `deff` clauses (`fn(%{"key" => v}) { ... }`)
 
 ## License
 
