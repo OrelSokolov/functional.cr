@@ -69,15 +69,25 @@ overloading works on types, not values.
 ## pipe — threading pipeline
 
 Elixir's `|>` semantics: the threaded value is inserted as the **first
-argument** of the next call. Flattens nested free-function calls:
+argument** of the next call. Flattens nested free-function calls. Write it
+multi-line by default — one step per line, like an Elixir pipeline:
 
 ```crystal
 # instead of: format_label(get_address(get_user(id)))
-label = pipe id, get_user, get_address, format_label
+label = pipe id,
+  get_user,
+  get_address,
+  format_label
 
-pipe 10, half, inc            # => inc(half(10))
-pipe 15, clamp(0, 10)         # => clamp(15, 0, 10)
-pipe 9, Math.sqrt             # => Math.sqrt(9)
+result = pipe "  Hi  ",
+  Str.trim,
+  Str.downcase,
+  Str.codepoints
+
+pipe 15,
+  clamp(0, 10)   # => clamp(15, 0, 10)
+
+pipe 9, Math.sqrt
 ```
 
 Step forms: `f(a)` → `f(value, a)` (free function), `Mod.m(a)` →
