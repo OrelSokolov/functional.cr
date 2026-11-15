@@ -1,3 +1,6 @@
 /shards.lock
 /lib
 /.shards/
+/examples/c_guards/unsafe
+/examples/c_guards/guarded
+/examples/c_guards/mathlib.o
