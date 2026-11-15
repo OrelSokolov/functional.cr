@@ -68,20 +68,24 @@ overloading works on types, not values.
 
 ## pipe — threading pipeline
 
-Elixir's `|>`, expanding to chained method calls at compile time:
+Elixir's `|>` semantics: the threaded value is inserted as the **first
+argument** of the next call. Flattens nested free-function calls:
 
 ```crystal
-pipe "1,2,3", split(","), map(&.to_i), sum   # => 6
-pipe "  hi  ", strip, upcase                 # => "HI"
+# instead of: format_label(get_address(get_user(id)))
+label = pipe id, get_user, get_address, format_label
+
+pipe 10, half, inc            # => inc(half(10))
+pipe 15, clamp(0, 10)         # => clamp(15, 0, 10)
+pipe 9, Math.sqrt             # => Math.sqrt(9)
 ```
 
-A step is a method call (receiver becomes the threaded value; args and
-blocks are kept), a proc literal, or a local variable holding a proc:
+Step forms: `f(a)` → `f(value, a)` (free function), `Mod.m(a)` →
+`Mod.m(value, a)` (namespaced function), a proc literal or a local proc
+variable → called with the value.
 
-```crystal
-double = ->(x : Int32) { x * 2 }
-pipe 5, double, inc        # procs are called with the threaded value
-```
+For method chaining on the value itself, plain `.` is already idiomatic
+Crystal — `pipe` exists for the nested-call case, exactly like `|>` in Elixir.
 
 ## Functional — proc helpers
 

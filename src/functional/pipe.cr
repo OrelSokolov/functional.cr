@@ -1,10 +1,18 @@
-# Threading pipeline: threads a value through a chain of method calls,
-# like Elixir's `|>`. Expands to plain chained method calls at compile time.
+# Threading pipe with Elixir `|>` semantics: the threaded value is inserted
+# as the FIRST ARGUMENT of the next call. This flattens nested calls:
 #
-#   pipe "1,2,3", split(","), map(&.to_i), sum   # => 6
+#   format_label(get_address(get_user(id)))
 #
-# A step is either a method call (applied to the threaded value as receiver,
-# extra args and blocks included) or a proc literal (called with the value).
+#   pipe id, get_user, get_address, format_label
+#
+# Step forms:
+#   - `f(a, b)`         -> `f(value, a, b)`      (free function, first arg)
+#   - `Mod.m(a)`        -> `Mod.m(value, a)`     (namespaced function)
+#   - `->(x) { ... }`   -> `proc.call(value)`
+#   - local proc var    -> `var.call(value)`
+#
+# Method chaining on the value itself (`"a,b".split(",").map(&.to_i)`)
+# is already idiomatic Crystal with `.` — no pipe needed there.
 
 macro pipe(value, *steps)
   _functional_pipe({{value}}, {{steps.splat}})
@@ -21,18 +29,23 @@ macro _functional_pipe(value, *steps)
 end
 
 macro _functional_step(value, c)
-  {% if c.is_a?(ProcLiteral) %}
-    {{c}}.call({{value}})
-  {% elsif c.is_a?(Var) %}
-    # local variable holding a proc: call it with the threaded value
+  {% if c.is_a?(ProcLiteral) || c.is_a?(Var) %}
     {{c}}.call({{value}})
   {% elsif c.is_a?(Call) %}
     {% if c.block %}
-      {{value}}.{{c.name.id}}({{c.args.splat}}) {{c.block}}
+      {% if c.receiver %}
+        {{c.receiver}}.{{c.name.id}}({{value}}, {{c.args.splat}}) {{c.block}}
+      {% else %}
+        {{c.name.id}}({{value}}, {{c.args.splat}}) {{c.block}}
+      {% end %}
     {% else %}
-      {{value}}.{{c.name.id}}({{c.args.splat}})
+      {% if c.receiver %}
+        {{c.receiver}}.{{c.name.id}}({{value}}, {{c.args.splat}})
+      {% else %}
+        {{c.name.id}}({{value}}, {{c.args.splat}})
+      {% end %}
     {% end %}
   {% else %}
-    {% raise "pipe step must be `method(args)` or a proc literal, got: #{c}" %}
+    {% raise "pipe step must be `function(args)`, `Mod.method(args)` or a proc, got: #{c}" %}
   {% end %}
 end
