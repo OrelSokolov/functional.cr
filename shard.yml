@@ -1,0 +1,9 @@
+name: functional
+version: 0.1.0
+authors:
+  - Oleg
+description: |
+  Functional programming toolkit for Crystal: multi-clause pattern-matching
+  functions (deff), threading pipeline (pipe), function composition helpers.
+license: MIT
+crystal: ">= 1.5.0"
